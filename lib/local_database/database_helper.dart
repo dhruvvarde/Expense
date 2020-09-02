@@ -1,12 +1,13 @@
 import 'dart:io';
 
-import 'package:expenses/local_database/models/expense.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import './models/expense.dart';
+
 
 class DatabaseHelper {
-  static final _databaseName = "MyDatabase.db";
+  static final _databaseName = 'MyDatabase.db';
   static final _databaseVersion = 1;
   static final table = 'my_table';
   static final columnId = '_id';
@@ -23,6 +24,7 @@ class DatabaseHelper {
   static Database _database;
 
   Future<Database> get database async {
+    // ignore: always_put_control_body_on_new_line
     if (_database != null) return _database;
     // lazily instantiate the db the first time it is accessed
     _database = await _initDatabase();
@@ -30,9 +32,10 @@ class DatabaseHelper {
   }
 
   // this opens the database (and creates it if it doesn't exist)
-  _initDatabase() async {
+  Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, _databaseName);
+    // ignore: unnecessary_await_in_return
     return await openDatabase(path,
         version: _databaseVersion, onCreate: _onCreate);
   }
@@ -43,7 +46,7 @@ class DatabaseHelper {
           CREATE TABLE $table (
             $columnId INTEGER PRIMARY KEY,
             $columnName TEXT NOT NULL,
-            $columnAmount TEXT NOT NULL,
+            $columnAmount DOUBLE NOT NULL,
             $columnDateIs TEXT NOT NULL
           )
           ''');
@@ -65,7 +68,7 @@ class DatabaseHelper {
     var dbClient = await instance.database;
     List<Map> maps = await dbClient.query(table,
         columns: [columnId, columnName, columnAmount, columnDateIs]);
-    if (maps.length > 0) {
+    if (maps.isNotEmpty) {
       maps.forEach((f) {
         data.add(Expense.fromMap(f));
       });

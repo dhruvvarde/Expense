@@ -1,12 +1,11 @@
-import 'package:expenses/ui/bar_chart.dart';
 import 'package:expenses/constants/colors.dart';
-import 'package:expenses/constants/font_family.dart';
-import 'package:expenses/constants/strings.dart';
-import 'package:expenses/local_database/DatabaseHelper.dart';
-import 'package:expenses/local_database/models/expense.dart';
-import 'package:expenses/utils/Utils.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../ui/bar_chart.dart';
+import '../constants/font_family.dart';
+import '../constants/strings.dart';
+import '../local_database/database_helper.dart';
+import '../local_database/models/expense.dart';
+import '../utils/util.dart';
 
 class ExpenseList extends StatefulWidget {
   @override
@@ -16,7 +15,7 @@ class ExpenseList extends StatefulWidget {
 }
 
 class _ExpenseList extends State<ExpenseList> {
-  List<Expense> _expenseList = new List();
+  List<Expense> _expenseList = List();
   TextEditingController nameController = TextEditingController();
   TextEditingController amountController = TextEditingController();
   TextEditingController selectedDate1 = TextEditingController();
@@ -24,14 +23,14 @@ class _ExpenseList extends State<ExpenseList> {
   final dbHelper = DatabaseHelper.instance;
   DateTime today = DateTime.now();
   DateTime mon, tue, wed, thu, fri, sat, sun;
-  var barMon = 0,
+  double barMon = 0,
       barTue = 0,
       barwed = 0,
       barThu = 0,
       barFri = 0,
       barsat = 0,
       barSun = 0;
-  var now = new DateTime.now();
+  var now = DateTime.now();
 
   @override
   void initState() {
@@ -42,9 +41,9 @@ class _ExpenseList extends State<ExpenseList> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(Strings.strExpenses),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(Strings.strExpenses),
       ),
       body: SafeArea(
         child: Column(
@@ -55,13 +54,13 @@ class _ExpenseList extends State<ExpenseList> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
-                  BarChart(barMon / 100, "Mo."),
-                  BarChart(barTue / 100, "Tue."),
-                  BarChart(barwed / 100, "Wed."),
-                  BarChart(barThu / 100, "Th."),
-                  BarChart(barFri / 100, "Fr."),
-                  BarChart(barsat / 100, "Sat."),
-                  BarChart(barSun / 100, "Sun."),
+                  BarChart(barMon / 100, 'Mo.'),
+                  BarChart(barTue / 100, 'Tue.'),
+                  BarChart(barwed / 100, 'Wed.'),
+                  BarChart(barThu / 100, 'Th.'),
+                  BarChart(barFri / 100, 'Fr.'),
+                  BarChart(barsat / 100, 'Sat.'),
+                  BarChart(barSun / 100, 'Sun.'),
                 ],
               ),
             ),
@@ -69,12 +68,10 @@ class _ExpenseList extends State<ExpenseList> {
           ],
         ),
       ),
-      floatingActionButton: new FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.blue,
-        onPressed: () {
-          addExpenseBottomSheet(context);
-        },
-        child: new Icon(
+        onPressed: addExpenseBottomSheet,
+        child: Icon(
           Icons.add,
           color: AppColors.black,
         ),
@@ -82,53 +79,14 @@ class _ExpenseList extends State<ExpenseList> {
     );
   }
 
-  void open(context) {
-    showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom),
-                    child: TextField(
-                      style: FontFamily.greyTitle,
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: Strings.strExpenseTitle,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom),
-                    child: TextField(
-                      style: FontFamily.greyTitle,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: Strings.strExpenseTitle,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                ],
-              ),
-            ));
-  }
-
-  void addExpenseBottomSheet(context) {
+  void addExpenseBottomSheet() {
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         builder: (BuildContext bc) {
           return Container(
             padding: EdgeInsets.all(20),
-            child: new Wrap(
+            child: Wrap(
               children: <Widget>[
                 Padding(
                     padding: MediaQuery.of(context).viewInsets,
@@ -220,32 +178,35 @@ class _ExpenseList extends State<ExpenseList> {
   void insert() async {
     Expense newExpense = Expense(
         title: nameController.text,
-        amount: amountController.text,
+        amount: double.parse(amountController.text),
         dateis: Utils.formatDate(selectedDate));
-    final id = await dbHelper.insert(newExpense);
-    print(id.title);
-    setState(() => {_expenseList.add(id), filterData()});
+    var data = await dbHelper.insert(newExpense);
+    // ignore: avoid_print
+    print(data.title);
+    setState(() => {_expenseList.add(data), filterData()});
   }
 
   // get data from Database
   void getDataList() async {
-    _expenseList = await dbHelper.getAllData();
+    _expenseList = (await dbHelper.getAllData()).cast<Expense>();
     filterData();
     setState(() {});
   }
 
   //open DatePicker
+  // ignore: always_declare_return_types
   openDatePicker(BuildContext context) async {
-    final DateTime picked = await showDatePicker(
+    DateTime picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
       firstDate: mon, //Minimum Date
       lastDate: sun, //Maximum Date
     );
-    if (picked != null && picked != selectedDate)
+    if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
       });
+    }
   }
 
   Widget expenseListView() {
@@ -311,18 +272,20 @@ class _ExpenseList extends State<ExpenseList> {
     );
   }
 
+  // ignore: always_declare_return_types
   weekDay() {
     int today = now.weekday;
     var dayNr = (today + 6) % 7;
-    mon = now.subtract(new Duration(days: (dayNr)));
-    tue = mon.add(new Duration(days: 1));
-    wed = mon.add(new Duration(days: 2));
-    thu = mon.add(new Duration(days: 3));
-    fri = mon.add(new Duration(days: 4));
-    sat = mon.add(new Duration(days: 5));
-    sun = mon.add(new Duration(days: 6));
+    mon = now.subtract(Duration(days: dayNr));
+    tue = mon.add(Duration(days: 1));
+    wed = mon.add(Duration(days: 2));
+    thu = mon.add(Duration(days: 3));
+    fri = mon.add(Duration(days: 4));
+    sat = mon.add(Duration(days: 5));
+    sun = mon.add(Duration(days: 6));
   }
 
+  // ignore: always_declare_return_types
   filterData() {
     barMon = getWeeklyData(barMon, mon);
     barTue = getWeeklyData(barTue, tue);
@@ -333,11 +296,12 @@ class _ExpenseList extends State<ExpenseList> {
     barSun = getWeeklyData(barSun, sun);
   }
 
-  int getWeeklyData(weekDay, date) {
+  double getWeeklyData(double weekDay, DateTime date) {
+    weekDay=0;
     var weekRecoard = _expenseList
         .where((element) => element.dateis == Utils.formatDate(date));
     weekRecoard.forEach((element) {
-      weekDay = weekDay + int.parse(element.amount);
+      weekDay = weekDay + element.amount;
     });
     return weekDay;
   }

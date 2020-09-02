@@ -7,7 +7,4 @@ class Utils {
     return DateFormat('MM.dd.yyyy').format(date);
   }
 
-  static String secondToDate(DateTime date) {
-    return DateFormat('MM.dd.yyyy').format(date);
-  }
 }

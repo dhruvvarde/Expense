@@ -32,6 +32,7 @@ dependencies:
   simple_animations: ^2.2.1
   sqflite: ^1.2.0
   intl: ^0.15.8
+  pedantic: ^1.0.0
 
 dev_dependencies:
   flutter_test:
